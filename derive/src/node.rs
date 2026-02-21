@@ -225,11 +225,11 @@ fn decode_str(
     val: &syn::Ident,
     ctx: &syn::Ident,
     optional: bool,
-    decode_with: Option<&syn::ExprPath>
+    decode_with: Option<&syn::ExprPath>,
 ) -> syn::Result<TokenStream> {
     let decode_with = decode_with
         .map(syn::ExprPath::to_token_stream)
-        .unwrap_or_else(|| quote![ ::std::str::FromStr::from_str ]);
+        .unwrap_or_else(|| quote![::std::str::FromStr::from_str]);
 
     if optional {
         Ok(quote![{
@@ -297,8 +297,7 @@ fn decode_value(
         DecodeMode::Normal => Ok(quote! {
             ::knus::traits::DecodeScalar::decode(#val, #ctx)
         }),
-        DecodeMode::Str =>
-            decode_str(val, ctx, optional, None),
+        DecodeMode::Str => decode_str(val, ctx, optional, None),
         DecodeMode::Bytes if optional => Ok(quote! {
             if matches!(&*#val.literal, ::knus::ast::Literal::Null) {
                 Ok(None)
@@ -319,8 +318,7 @@ fn decode_value(
             .map_err(|e| ::knus::errors::DecodeError::conversion(
                     &#val.literal, e))
         }),
-        DecodeMode::With(path) =>
-            decode_str(val, ctx, optional, Some(&path)),
+        DecodeMode::With(path) => decode_str(val, ctx, optional, Some(&path)),
     }
 }
 
@@ -452,11 +450,11 @@ fn decode_args(s: &Common, node: &syn::Ident) -> syn::Result<TokenStream> {
         });
     } else {
         decoder.push(quote! {
-            if let Some(val) = #iter_args.next() {
-                return Err(::knus::errors::DecodeError::unexpected(
-                        &val.literal, "argument",
-                        "unexpected argument"));
-            }
+            // if let Some(val) = #iter_args.next() {
+            //     return Err(::knus::errors::DecodeError::unexpected(
+            //             &val.literal, "argument",
+            //             "unexpected argument"));
+            // }
         });
     }
     Ok(quote! { #(#decoder)* })
@@ -946,10 +944,10 @@ fn decode_children(
     } else {
         match_branches.push(quote! {
             #name_str => {
-                #ctx.emit_error(::knus::errors::DecodeError::unexpected(
-                    #child, "node",
-                    format!("unexpected node `{}`",
-                            #name_str.escape_default())));
+                // #ctx.emit_error(::knus::errors::DecodeError::unexpected(
+                //     #child, "node",
+                //     format!("unexpected node `{}`",
+                //             #name_str.escape_default())));
                 None
             }
         });
