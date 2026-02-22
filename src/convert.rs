@@ -91,6 +91,13 @@ macro_rules! impl_float {
                             Ok(0.0)
                         }
                     },
+                    Literal::Int(value) => match value.try_into() {
+                        Ok(val) => Ok(val),
+                        Err(e) => {
+                            ctx.emit_error(DecodeError::conversion(val, e));
+                            Ok(0.0)
+                        }
+                    },
                     _ => {
                         ctx.emit_error(DecodeError::scalar_kind(Kind::String, val));
                         Ok(0.0)
@@ -115,6 +122,25 @@ macro_rules! impl_float {
 
 impl_float!(f32, F32);
 impl_float!(f64, F64);
+
+macro_rules! impl_integer_to_float {
+    ($typ: ident) => {
+        impl TryFrom<&Integer> for $typ {
+            type Error = <i128 as FromStr>::Err;
+            fn try_from(val: &Integer) -> Result<$typ, <i128 as FromStr>::Err> {
+                match val.0 {
+                    Radix::Bin => i128::from_str_radix(&val.1, 2),
+                    Radix::Oct => i128::from_str_radix(&val.1, 8),
+                    Radix::Dec => i128::from_str(&val.1),
+                    Radix::Hex => i128::from_str_radix(&val.1, 16),
+                }
+                .map(|v| v as $typ)
+            }
+        }
+    };
+}
+impl_integer_to_float!(f32);
+impl_integer_to_float!(f64);
 
 impl<S: ErrorSpan> DecodeScalar<S> for String {
     fn raw_decode(
